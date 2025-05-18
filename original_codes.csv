@@ -1,0 +1,831 @@
+id,repo,line_link,original_code,code_no_doc
+0,https://github.com/pydantic/pydantic/,https://github.com/pydantic/pydantic/blob/main/.github/actions/people/people.py#L358,"def get_graphql_response(
+    *,
+    settings: Settings,
+    query: str,
+    after: str | None = None,
+) -> dict[str, Any]:
+    """"""Make a GraphQL request to GitHub API.
+
+    Args:
+        settings: Configuration settings including API token
+        query: GraphQL query string
+        after: Cursor for pagination, if any
+
+    Returns:
+        Response data from GitHub API in JSON format
+
+    Raises:
+        RuntimeError: If the API request fails or returns errors
+    """"""
+    headers = {'Authorization': f'token {settings.input_token.get_secret_value()}'}
+    variables = {'after': after}
+    response = requests.post(
+        github_graphql_url,
+        headers=headers,
+        timeout=settings.request_timeout,
+        json={'query': query, 'variables': variables, 'operationName': 'Q'},
+    )
+    if response.status_code != 200:
+        logging.error(f'Response was not 200, after: {after}')
+        logging.error(response.text)
+        raise RuntimeError(response.text)
+    data = response.json()
+    if 'errors' in data:
+        logging.error(f'Errors in response, after: {after}')
+        logging.error(data['errors'])
+        logging.error(response.text)
+        raise RuntimeError(response.text)
+    return data","def get_graphql_response(
+    *,
+    settings: Settings,
+    query: str,
+    after: str | None = None,
+) -> dict[str, Any]:
+    headers = {'Authorization': f'token {settings.input_token.get_secret_value()}'}
+    variables = {'after': after}
+    response = requests.post(
+        github_graphql_url,
+        headers=headers,
+        timeout=settings.request_timeout,
+        json={'query': query, 'variables': variables, 'operationName': 'Q'},
+    )
+    if response.status_code != 200:
+        logging.error(f'Response was not 200, after: {after}')
+        logging.error(response.text)
+        raise RuntimeError(response.text)
+    data = response.json()
+    if 'errors' in data:
+        logging.error(f'Errors in response, after: {after}')
+        logging.error(data['errors'])
+        logging.error(response.text)
+        raise RuntimeError(response.text)
+    return data"
+1,https://github.com/pydantic/pydantic/,https://github.com/pydantic/pydantic/blob/f2e7385766926dfb14056b8da7fe0b88b2ce9f19/pydantic/experimental/arguments_schema.py#L14,"def generate_arguments_schema(
+    func: Callable[..., Any],
+    schema_type: Literal['arguments', 'arguments-v3'] = 'arguments-v3',
+    parameters_callback: Callable[[int, str, Any], Literal['skip'] | None] | None = None,
+    config: ConfigDict | None = None,
+) -> CoreSchema:
+    """"""Generate the schema for the arguments of a function.
+    Args:
+        func: The function to generate the schema for.
+        schema_type: The type of schema to generate.
+        parameters_callback: A callable that will be invoked for each parameter. The callback
+            should take three required arguments: the index, the name and the type annotation
+            (or [`Parameter.empty`][inspect.Parameter.empty] if not annotated) of the parameter.
+            The callback can optionally return `'skip'`, so that the parameter gets excluded
+            from the resulting schema.
+        config: The configuration to use.
+    Returns:
+        The generated schema.
+    """"""
+    generate_schema = _generate_schema.GenerateSchema(
+        _config.ConfigWrapper(config),
+        ns_resolver=_namespace_utils.NsResolver(namespaces_tuple=_namespace_utils.ns_for_function(func)),
+    )
+
+    if schema_type == 'arguments':
+        schema = generate_schema._arguments_schema(func, parameters_callback)  # pyright: ignore[reportArgumentType]
+    else:
+        schema = generate_schema._arguments_v3_schema(func, parameters_callback)  # pyright: ignore[reportArgumentType]
+    return generate_schema.clean_schema(schema)","def generate_arguments_schema(
+    func: Callable[..., Any],
+    schema_type: Literal['arguments', 'arguments-v3'] = 'arguments-v3',
+    parameters_callback: Callable[[int, str, Any], Literal['skip'] | None] | None = None,
+    config: ConfigDict | None = None,
+) -> CoreSchema:
+    generate_schema = _generate_schema.GenerateSchema(
+        _config.ConfigWrapper(config),
+        ns_resolver=_namespace_utils.NsResolver(namespaces_tuple=_namespace_utils.ns_for_function(func)),
+    )
+
+    if schema_type == 'arguments':
+        schema = generate_schema._arguments_schema(func, parameters_callback)  # pyright: ignore[reportArgumentType]
+    else:
+        schema = generate_schema._arguments_v3_schema(func, parameters_callback)  # pyright: ignore[reportArgumentType]
+    return generate_schema.clean_schema(schema)"
+2,https://github.com/Textualize/rich/,https://github.com/Textualize/rich/blob/17baaed1c0525f23dca438b8192af79cb52b792e/tests/test_traceback.py#L363,"@pytest.mark.skipif(
+    sys.version_info.minor < 11, reason=""Not supported before Python 3.11""
+)
+def test_notes() -> None:
+    """"""Check traceback captures __note__.""""""
+    try:
+        1 / 0
+    except Exception as error:
+        error.add_note(""Hello"")
+        error.add_note(""World"")
+        traceback = Traceback()
+
+        assert traceback.trace.stacks[0].notes == [""Hello"", ""World""]","@pytest.mark.skipif(
+    sys.version_info.minor < 11, reason=""Not supported before Python 3.11""
+)
+def test_notes() -> None:
+    try:
+        1 / 0
+    except Exception as error:
+        error.add_note(""Hello"")
+        error.add_note(""World"")
+        traceback = Traceback()
+
+        assert traceback.trace.stacks[0].notes == [""Hello"", ""World""]"
+3,https://github.com/fretboardfreak/netify/,https://github.com/fretboardfreak/netify/blob/master/src/netify/template.py#L112,"def dict_to_html_list(dictionary, key_sep=None):
+    """"""Convert a python dictionary into a string representing an HTML list.""""""
+    key_sep = ': ' if not key_sep else key_sep
+    doc = Doc()
+    if not dictionary:
+        return """"
+    with doc.tag('ul'):
+        for key in dictionary:
+            with doc.tag('li'):
+                if isinstance(dictionary[key], dict):
+                    doc.text('%s%s' % (key, key_sep))
+                    doc.asis(dict_to_html_list(dictionary[key]))
+                elif isinstance(dictionary[key], (list, tuple)):
+                    doc.asis(list_to_html_list(dictionary[key]))
+                else:
+                    doc.text('%s%s%s' % (key, key_sep, dictionary[key]))
+    return doc.getvalue()","def dict_to_html_list(dictionary, key_sep=None):
+    key_sep = ': ' if not key_sep else key_sep
+    doc = Doc()
+    if not dictionary:
+        return """"
+    with doc.tag('ul'):
+        for key in dictionary:
+            with doc.tag('li'):
+                if isinstance(dictionary[key], dict):
+                    doc.text('%s%s' % (key, key_sep))
+                    doc.asis(dict_to_html_list(dictionary[key]))
+                elif isinstance(dictionary[key], (list, tuple)):
+                    doc.asis(list_to_html_list(dictionary[key]))
+                else:
+                    doc.text('%s%s%s' % (key, key_sep, dictionary[key]))
+    return doc.getvalue()"
+4,https://github.com/ollionorg/risc-python/,https://github.com/ollionorg/risc-python/blob/master/risc/main.py#L393,"def get_application_ips(
+    self, application: str, identifying_ips_only: bool = True
+) -> List[Any]:
+    """"""Get all associated IP addresses for the provided application stack.
+
+    Args:
+        application (str): The application stack name, as identified in RISC.
+        identifying_ips_only (bool): Whether or not to return only the identifying_ip value
+            for each asset found within the application stack. If set to: False, this method
+            will iterate through all ips in the device data object. Defaults to: True.
+
+    Returns:
+        list of str: The list of device IP addresses present in the application stack.
+
+    """"""
+    ip_addresses: List[str] = []
+    stack_id = self.lookup_stack_id(application)
+    if not stack_id:
+        return ip_addresses
+    stack_assets = self.assets_get_assets(stack_id=stack_id)
+    if stack_assets.status_code != 200:
+        logger.error(
+            ""Failed to retrieve application stack assets for: (%s)"" % application
+        )
+        return ip_addresses
+
+    for asset in stack_assets.json().get(""assets"", []):
+        asset_data = asset.get(""data"", {})
+        if identifying_ips_only:
+            # Handle dict and list types differently, because this API has no standard responses or models...
+            if isinstance(asset_data, dict):
+                ip = asset_data.get(""identifying_ip"", """")
+            elif isinstance(asset_data, list):
+                ip = next(
+                    item[""identifying_ip""]
+                    for item in asset_data
+                    if ""identifying_ip"" in item
+                )
+            if ip and ip != ""NULL"":
+                ip_addresses.append(ip)
+        else:
+            if isinstance(asset_data, dict):
+                found_ips = asset_data.get(""ips"", [])
+            elif isinstance(asset_data, list):
+                found_ips = next(
+                    item[""ips""] for item in asset_data if ""ips"" in item
+                )
+            if found_ips:
+                ips = [
+                    found_ip[""ip""]
+                    for found_ip in found_ips
+                    if found_ip[""ip""] != ""NULL""
+                ]
+                ip_addresses += ips
+    ip_addresses = sorted(list(set(ip_addresses)))
+    return ip_addresses","def get_application_ips(
+    self, application: str, identifying_ips_only: bool = True
+) -> List[Any]:
+    ip_addresses: List[str] = []
+    stack_id = self.lookup_stack_id(application)
+    if not stack_id:
+        return ip_addresses
+    stack_assets = self.assets_get_assets(stack_id=stack_id)
+    if stack_assets.status_code != 200:
+        logger.error(
+            ""Failed to retrieve application stack assets for: (%s)"" % application
+        )
+        return ip_addresses
+
+    for asset in stack_assets.json().get(""assets"", []):
+        asset_data = asset.get(""data"", {})
+        if identifying_ips_only:
+            # Handle dict and list types differently, because this API has no standard responses or models...
+            if isinstance(asset_data, dict):
+                ip = asset_data.get(""identifying_ip"", """")
+            elif isinstance(asset_data, list):
+                ip = next(
+                    item[""identifying_ip""]
+                    for item in asset_data
+                    if ""identifying_ip"" in item
+                )
+            if ip and ip != ""NULL"":
+                ip_addresses.append(ip)
+        else:
+            if isinstance(asset_data, dict):
+                found_ips = asset_data.get(""ips"", [])
+            elif isinstance(asset_data, list):
+                found_ips = next(
+                    item[""ips""] for item in asset_data if ""ips"" in item
+                )
+            if found_ips:
+                ips = [
+                    found_ip[""ip""]
+                    for found_ip in found_ips
+                    if found_ip[""ip""] != ""NULL""
+                ]
+                ip_addresses += ips
+    ip_addresses = sorted(list(set(ip_addresses)))
+    return ip_addresses"
+5,https://github.com/myl7/ssrcli/,https://github.com/myl7/ssrcli/blob/master/ssrcli/utils.py#L11,"def b64_decode_ssr(e_str: str) -> str:
+    """"""add ""="" at tail automatically to perform base64 decoding""""""
+    remainder = len(e_str) % 4
+    if remainder == 2:
+        e_str += '=='
+    elif remainder == 3:
+        e_str += '='
+    elif remainder == 0:
+        pass
+    else:
+        raise B64DecodeSsrException()
+    return base64.urlsafe_b64decode(e_str.encode('utf-8')).decode('utf-8')","def b64_decode_ssr(e_str: str) -> str:
+    remainder = len(e_str) % 4
+    if remainder == 2:
+        e_str += '=='
+    elif remainder == 3:
+        e_str += '='
+    elif remainder == 0:
+        pass
+    else:
+        raise B64DecodeSsrException()
+    return base64.urlsafe_b64decode(e_str.encode('utf-8')).decode('utf-8')"
+6,https://github.com/radekBednarik/att/,https://github.com/radekBednarik/att/blob/master/apitalker/api.py#L99,"def query(
+    self, resource: str, order=None, where=None, **kwargs
+) -> Union[ApiResponse, ApiError, int]:
+    """"""Queries API for data from <resource>. See https://www.api.store/czso.cz/dokumentace#section/Query-parametry
+
+    Args:
+        resource (str): API resource path as specified in Apitalks documentation
+
+    Keyword Args:
+        order (str): order output of returned data of api call.
+            e.g `order='""id ASC, nazev DESC""'`. 
+
+        where (str): specify filtering of the returned data of api call.
+            e.g. `where='""rok"":{""gt"":2000}'` or `where='""rok=2000,""barva"":""red""'`
+
+        limit (int): add limit to set limit for one page of returned data via api call. Defaults to `max_limit`.
+
+        skip (int): add skip to set number of skipped data entries via api call. Defaults to `default_skip`.
+        
+    Returns:
+        (Union[ApiResponse, ApiError, int])
+            * ApiResponse: class instance with attributes of successfull API call
+
+            * ApiError: class instance with attributes of unsuccessfull API call
+            
+            * int: 1, if some other bad stuff happened
+
+    """"""
+    resource = f""{self.base_url}{resource}""
+    keys_ = list(kwargs.keys())
+    retries = kwargs[""retries""] if ""retries"" in keys_ else 0
+
+    # create always added filters for api request params
+    limit_ = str(kwargs[""limit""]) if ""limit"" in keys_ else self.max_limit
+    skip_ = str(kwargs[""skip""]) if ""skip"" in keys_ else self.default_skip
+    filter_ = """".join([r'{""limit"":', f""{limit_}"", "","", r'""skip"":', f""{skip_}"", ""}""])
+
+    # check and add other filters for api request params
+    if order is not None:
+        order_param_ = """".join(["","", r'""order"":', ""["", f""{order}"", ""]"", ""}""])
+        filter_ = filter_.replace(filter_[-1], order_param_)
+
+    if where is not None:
+        where_param_ = """".join(["","", r'""where"":', ""{"", f""{where}"", ""}"", ""}""])
+        filter_ = filter_.replace(filter_[-1], where_param_)
+
+    # send api request
+    response_ = self.get(
+        resource,
+        headers={self.api_auth_name: self.api_key},
+        params={""filter"": filter_},
+    )
+    json_ = response_.json()
+    json_keys = list(json_.keys())
+    print(f""Requested API resource: '{unquote_plus(response_.request.url)}'"")  # type: ignore
+
+    if response_.status_code in [200]:
+        print(""Request successful."")
+
+        return ApiResponse(
+            resource=resource,
+            response=json_,
+            data=json_[""data""] if ""data"" in json_keys else None,
+            skip=json_[""skip""] if ""skip"" in json_keys else None,
+            count=json_[""count""] if ""count"" in json_keys else None,
+            limit=json_[""limit""] if ""limit"" in json_keys else None,
+            info=json_[""info""] if ""info"" in json_keys else None,
+            provider=json_[""info""][""provider""] if ""info"" in json_keys else None,
+        )
+
+    if response_.status_code in [400, 403, 404, 409, 429]:
+        print(
+            f""API returned error. HTTP response status: {response_.status_code}. Returned message: {json_}.""
+        )
+        return ApiError(
+            resource=resource,
+            response=json_,
+            error=json_[""error""] if ""error"" in json_keys else None,
+            status_code=json_[""error""][""statusCode""] if ""error"" in json_keys else None,
+            name=json_[""error""][""name""] if ""error"" in json_keys else None,
+            message=json_[""error""][""message""] if ""error"" in json_keys else None,
+        )
+
+    if response_.status_code in [502, 503, 504]:
+        print(
+            f""API returned error. HTTP response status: {response_.status_code}. Returned message: {json_}. Retrying...""
+        )
+        if retries <= 10:
+            sleep(retries * 2)
+            retries += 1
+            return self.query(
+                resource,
+                retries=retries,
+                order=order,
+                where=where,
+                limit=limit_,
+                skip=skip_,
+                **kwargs,
+            )
+        print(f""Retried {retries} times. That is enough."")
+        return ApiError(
+            resource=resource,
+            response=json_,
+            error=json_[""error""] if ""error"" in json_keys else None,
+            status_code=json_[""error""][""statusCode""] if ""error"" in json_keys else None,
+            name=json_[""error""][""name""] if ""error"" in json_keys else None,
+            message=json_[""error""][""message""] if ""error"" in json_keys else None,
+        )
+
+    return 1","def query(
+    self, resource: str, order=None, where=None, **kwargs
+) -> Union[ApiResponse, ApiError, int]:
+    resource = f""{self.base_url}{resource}""
+    keys_ = list(kwargs.keys())
+    retries = kwargs[""retries""] if ""retries"" in keys_ else 0
+
+    # create always added filters for api request params
+    limit_ = str(kwargs[""limit""]) if ""limit"" in keys_ else self.max_limit
+    skip_ = str(kwargs[""skip""]) if ""skip"" in keys_ else self.default_skip
+    filter_ = """".join([r'{""limit"":', f""{limit_}"", "","", r'""skip"":', f""{skip_}"", ""}""])
+
+    # check and add other filters for api request params
+    if order is not None:
+        order_param_ = """".join(["","", r'""order"":', ""["", f""{order}"", ""]"", ""}""])
+        filter_ = filter_.replace(filter_[-1], order_param_)
+
+    if where is not None:
+        where_param_ = """".join(["","", r'""where"":', ""{"", f""{where}"", ""}"", ""}""])
+        filter_ = filter_.replace(filter_[-1], where_param_)
+
+    # send api request
+    response_ = self.get(
+        resource,
+        headers={self.api_auth_name: self.api_key},
+        params={""filter"": filter_},
+    )
+    json_ = response_.json()
+    json_keys = list(json_.keys())
+    print(f""Requested API resource: '{unquote_plus(response_.request.url)}'"")  # type: ignore
+
+    if response_.status_code in [200]:
+        print(""Request successful."")
+
+        return ApiResponse(
+            resource=resource,
+            response=json_,
+            data=json_[""data""] if ""data"" in json_keys else None,
+            skip=json_[""skip""] if ""skip"" in json_keys else None,
+            count=json_[""count""] if ""count"" in json_keys else None,
+            limit=json_[""limit""] if ""limit"" in json_keys else None,
+            info=json_[""info""] if ""info"" in json_keys else None,
+            provider=json_[""info""][""provider""] if ""info"" in json_keys else None,
+        )
+
+    if response_.status_code in [400, 403, 404, 409, 429]:
+        print(
+            f""API returned error. HTTP response status: {response_.status_code}. Returned message: {json_}.""
+        )
+        return ApiError(
+            resource=resource,
+            response=json_,
+            error=json_[""error""] if ""error"" in json_keys else None,
+            status_code=json_[""error""][""statusCode""] if ""error"" in json_keys else None,
+            name=json_[""error""][""name""] if ""error"" in json_keys else None,
+            message=json_[""error""][""message""] if ""error"" in json_keys else None,
+        )
+
+    if response_.status_code in [502, 503, 504]:
+        print(
+            f""API returned error. HTTP response status: {response_.status_code}. Returned message: {json_}. Retrying...""
+        )
+        if retries <= 10:
+            sleep(retries * 2)
+            retries += 1
+            return self.query(
+                resource,
+                retries=retries,
+                order=order,
+                where=where,
+                limit=limit_,
+                skip=skip_,
+                **kwargs,
+            )
+        print(f""Retried {retries} times. That is enough."")
+        return ApiError(
+            resource=resource,
+            response=json_,
+            error=json_[""error""] if ""error"" in json_keys else None,
+            status_code=json_[""error""][""statusCode""] if ""error"" in json_keys else None,
+            name=json_[""error""][""name""] if ""error"" in json_keys else None,
+            message=json_[""error""][""message""] if ""error"" in json_keys else None,
+        )
+
+    return 1"
+7,https://github.com/pybpc/bpc-utils/,https://github.com/pybpc/bpc-utils/blob/main/bpc_utils/argparse.py#L9,"def parse_positive_integer(s: 'Optional[Union[str, int]]') -> 'Optional[int]':
+    """"""Parse a positive integer from a string representation.
+
+    Args:
+        s: string representation of a positive integer, or just an integer
+
+    Returns:
+        the parsed integer result, return :data:`None` if input is :data:`None` or empty string
+
+    Raises:
+        TypeError: if ``s`` is not :obj:`str` or :obj:`int`
+        ValueError: if ``s`` is an invalid positive integer value
+
+    """"""
+    if s is None or s == '':  # pylint: disable=compare-to-empty-string
+        return None
+    if not isinstance(s, (str, int)):
+        raise TypeError('expect str or int, got {!r}'.format(s))
+    try:
+        value = int(s)
+    except ValueError:
+        raise ValueError('expect an integer value, got {!r}'.format(s)) from None
+    if value <= 0:
+        raise ValueError('expect integer value to be positive, got {!r}'.format(value))
+    return value","def parse_positive_integer(s: 'Optional[Union[str, int]]') -> 'Optional[int]':
+    if s is None or s == '':  # pylint: disable=compare-to-empty-string
+        return None
+    if not isinstance(s, (str, int)):
+        raise TypeError('expect str or int, got {!r}'.format(s))
+    try:
+        value = int(s)
+    except ValueError:
+        raise ValueError('expect an integer value, got {!r}'.format(s)) from None
+    if value <= 0:
+        raise ValueError('expect integer value to be positive, got {!r}'.format(value))
+    return value"
+8,https://github.com/pybpc/bpc-utils/,https://github.com/pybpc/bpc-utils/blob/main/bpc_utils/argparse.py#L50,"def parse_boolean_state(s: 'Optional[str]') -> 'Optional[bool]':
+    """"""Parse a boolean state from a string representation.
+
+    * These values are regarded as :data:`True`: ``'1'``, ``'yes'``, ``'y'``, ``'true'``, ``'on'``
+    * These values are regarded as :data:`False`: ``'0'``, ``'no'``, ``'n'``, ``'false'``, ``'off'``
+
+    Value matching is case **insensitive**.
+
+    Args:
+        s: string representation of a boolean state
+
+    Returns:
+        the parsed boolean result, return :data:`None` if input is :data:`None`
+
+    Raises:
+        ValueError: if ``s`` is an invalid boolean state value
+
+    See Also:
+        See :data:`~bpc_utils.argparse._boolean_state_lookup` for default lookup mapping values.
+
+    """"""
+    if s is None:
+        return None
+    try:
+        return _boolean_state_lookup[s.lower()]
+    except KeyError:
+        raise ValueError('invalid boolean state value {!r}'.format(s)) from None","def parse_boolean_state(s: 'Optional[str]') -> 'Optional[bool]':
+    if s is None:
+        return None
+    try:
+        return _boolean_state_lookup[s.lower()]
+    except KeyError:
+        raise ValueError('invalid boolean state value {!r}'.format(s)) from None"
+9,https://github.com/pybpc/bpc-utils/,https://github.com/pybpc/bpc-utils/blob/main/bpc_utils/argparse.py#L120,"def parse_indentation(s: 'Optional[Union[str, int]]') -> 'Optional[str]':
+    r""""""Parse indentation from a string representation.
+
+    * If an integer or a string of positive integer ``n`` is specified, then indentation is ``n`` spaces.
+    * If ``'t'`` or ``'tab'`` is specified, then indentation is tab.
+    * If ``'\t'``  (the tab character itself) or a string consisting only of the space character (U+0020)
+      is specified, it is returned directly.
+
+    Value matching is **case insensitive**.
+
+    Args:
+        s: string representation of indentation
+
+    Returns:
+        the parsed indentation result, return :data:`None` if input is :data:`None` or empty string
+
+    Raises:
+        TypeError: if ``s`` is not :obj:`str` or :obj:`int`
+        ValueError: if ``s`` is an invalid indentation value
+
+    """"""
+    if s is None or s == '':  # pylint: disable=compare-to-empty-string
+        return None
+    if not isinstance(s, (str, int)):
+        raise TypeError('expect str or int, got {!r}'.format(s))
+    if isinstance(s, str):
+        if s.lower() in {'t', 'tab', '\t'}:
+            return '\t'
+        if s == ' ' * len(s):
+            return s
+    try:
+        n = int(s)
+        if n <= 0:
+            raise ValueError
+        return ' ' * n
+    except ValueError:
+        raise ValueError('invalid indentation value {!r}'.format(s)) from None","def parse_indentation(s: 'Optional[Union[str, int]]') -> 'Optional[str]':
+    if s is None or s == '':  # pylint: disable=compare-to-empty-string
+        return None
+    if not isinstance(s, (str, int)):
+        raise TypeError('expect str or int, got {!r}'.format(s))
+    if isinstance(s, str):
+        if s.lower() in {'t', 'tab', '\t'}:
+            return '\t'
+        if s == ' ' * len(s):
+            return s
+    try:
+        n = int(s)
+        if n <= 0:
+            raise ValueError
+        return ' ' * n
+    except ValueError:
+        raise ValueError('invalid indentation value {!r}'.format(s)) from None"
+10,https://github.com/almazkun/npss/,https://github.com/almazkun/npss/blob/main/npss/npss.py#L6,"def npss(length: int) -> str:
+    """"""Generates random string of the given length with at least one ""-"".
+
+    Args:
+        length (int): Desired length.
+
+    Returns:
+        str: Your new shiny random password.
+    """"""
+    while True:
+        pss = token_urlsafe(length)[:length]
+        if ""-"" in pss:
+            return pss","def npss(length: int) -> str:
+    while True:
+        pss = token_urlsafe(length)[:length]
+        if ""-"" in pss:
+            return pss"
+11,https://github.com/almazkun/npss/,https://github.com/almazkun/npss/blob/main/npss/npss.py#L21,"def argv_pars(arguments: List[str]) -> int:
+    """"""Returns second argv or 30.
+
+    Args:
+        argv (List[str]): sys.argv
+
+    Returns:
+        int: i >= 1, or 30
+    """"""
+    try:
+        return max(int(arguments[1]), 1)
+    except Exception:
+        return 30","def argv_pars(arguments: List[str]) -> int:
+    try:
+        return max(int(arguments[1]), 1)
+    except Exception:
+        return 30"
+12,https://github.com/nickgaya/bravado-types/,https://github.com/nickgaya/bravado-types/blob/master/bravado_types/render.py#L9,"def render(metadata: Metadata, spec: SpecInfo, config: Config) -> None:
+    """"""
+    Render module and stub files for a given Swagger schema.
+    :param metadata: Code generation metadata.
+    :param spec: SpecInfo representing the schema.
+    :param config: Code generation configuration.
+    """"""
+    template_dirs = []
+    if config.custom_templates_dir:
+        template_dirs.append(config.custom_templates_dir)
+    template_dirs.append(
+        pkg_resources.resource_filename(__name__, ""templates/""))
+    lookup = TemplateLookup(directories=template_dirs)
+
+    py_template = lookup.get_template(""module.py.mako"")
+    with open(config.py_path, ""w"") as f:
+        f.write(py_template.render(metadata=metadata, spec=spec,
+                                   config=config))
+
+    pyi_template = lookup.get_template(""module.pyi.mako"")
+    with open(config.pyi_path, ""w"") as f:
+        f.write(pyi_template.render(metadata=metadata, spec=spec,
+                                    config=config))
+
+    if config.postprocessor:
+        config.postprocessor(config.py_path, config.pyi_path)","def render(metadata: Metadata, spec: SpecInfo, config: Config) -> None:
+    template_dirs = []
+    if config.custom_templates_dir:
+        template_dirs.append(config.custom_templates_dir)
+    template_dirs.append(
+        pkg_resources.resource_filename(__name__, ""templates/""))
+    lookup = TemplateLookup(directories=template_dirs)
+
+    py_template = lookup.get_template(""module.py.mako"")
+    with open(config.py_path, ""w"") as f:
+        f.write(py_template.render(metadata=metadata, spec=spec,
+                                   config=config))
+
+    pyi_template = lookup.get_template(""module.pyi.mako"")
+    with open(config.pyi_path, ""w"") as f:
+        f.write(pyi_template.render(metadata=metadata, spec=spec,
+                                    config=config))
+
+    if config.postprocessor:
+        config.postprocessor(config.py_path, config.pyi_path)"
+13,https://gitlab.com/finite-loop/flutils/,https://gitlab.com/finite-loop/flutils/-/blame/master/flutils/txtutils.py?ref_type=heads#L25,"def len_without_ansi(seq: Sequence) -> int:
+    """"""Return the character length of the given
+    :obj:`Sequence <typing.Sequence>` without counting any ANSI codes.
+
+    *New in version 0.6*
+
+    Args:
+         seq (:obj:`Sequence <typing.Sequence>`): A string or a list/tuple
+             of strings.
+
+    :rtype:
+        :obj:`int`
+
+    Example:
+        >>> from flutils.txtutils import len_without_ansi
+        >>> text = '\\x1b[38;5;209mfoobar\\x1b[0m'
+        >>> len_without_ansi(text)
+        6
+    """"""
+    if hasattr(seq, 'capitalize'):
+        _text: str = cast(str, seq)
+        seq = [c for c in _ANSI_RE.split(_text) if c]
+    seq = [c for c in chain(*map(_ANSI_RE.split, seq)) if c]
+    seq = cast(Sequence[str], seq)
+    out = 0
+    for text in seq:
+        if hasattr(text, 'capitalize'):
+            if text.startswith('\x1b[') and text.endswith('m'):
+                continue
+            else:
+                out += len(text)
+    return out","def len_without_ansi(seq: Sequence) -> int:
+    if hasattr(seq, 'capitalize'):
+        _text: str = cast(str, seq)
+        seq = [c for c in _ANSI_RE.split(_text) if c]
+    seq = [c for c in chain(*map(_ANSI_RE.split, seq)) if c]
+    seq = cast(Sequence[str], seq)
+    out = 0
+    for text in seq:
+        if hasattr(text, 'capitalize'):
+            if text.startswith('\x1b[') and text.endswith('m'):
+                continue
+            else:
+                out += len(text)
+    return out"
+14,https://gitlab.com/finite-loop/flutils/,https://gitlab.com/finite-loop/flutils/-/blame/master/flutils/validators.py?ref_type=heads#L15,"def validate_identifier(
+        identifier: Union[str, UserString],
+        allow_underscore: bool = True
+) -> None:
+    """"""Validate the given string is a proper identifier.
+
+    This validator will also raise an error if the given identifier is a
+    keyword or a builtin identifier.
+
+    Args:
+        identifier (:obj:`str` or :obj:`UserString <collections.UserString>`):
+            The value to be tested.
+        allow_underscore (:obj:`bool`, optional): A value of :obj:`False`
+            will raise an error when the ``identifier`` has a value that starts
+            with an underscore ``_``. (Use :obj:`False` when validating
+            potential :obj:`namedtuple <collections.namedtuple>` keys)
+            Defaults to: :obj:`True`.
+
+    Raises:
+        SyntaxError: If the given identifier is invalid.
+        TypeError: If the given identifier is not a :obj:`str` or
+            :obj:`UserString <collections.UserString>`.
+
+    :rtype: :obj:`None`
+
+    Example:
+        >>> from flutils.validators import validate_identifier
+        >>> validate_identifier('123')
+        SyntaxError: The given 'identifier', '123', cannot start with a number
+    """"""
+    if isinstance(identifier, UserString):
+        identifier = str(identifier)
+    if not isinstance(identifier, str):
+        raise TypeError(
+            ""The given 'identifier' must be a 'str'.  Got: %r""
+            % type(identifier).__name__
+        )
+    identifier = identifier.strip()
+    if not identifier:
+        raise SyntaxError(""The given 'identifier' cannot be empty"")
+
+    if allow_underscore is False and identifier[0:1] == '_':
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, cannot start with an ""
+            ""underscore '_'""
+        )
+
+    if identifier[0:1].isdigit():
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, cannot start with a ""
+            ""number""
+        )
+
+    if not identifier.isidentifier():
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, is invalid.""
+        )
+
+    if keyword.iskeyword(identifier):
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, cannot be a keyword""
+        )
+
+    if identifier in _BUILTIN_NAMES:
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, cannot be a builtin name""
+        )","def validate_identifier(
+        identifier: Union[str, UserString],
+        allow_underscore: bool = True
+) -> None:
+    if isinstance(identifier, UserString):
+        identifier = str(identifier)
+    if not isinstance(identifier, str):
+        raise TypeError(
+            ""The given 'identifier' must be a 'str'.  Got: %r""
+            % type(identifier).__name__
+        )
+    identifier = identifier.strip()
+    if not identifier:
+        raise SyntaxError(""The given 'identifier' cannot be empty"")
+
+    if allow_underscore is False and identifier[0:1] == '_':
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, cannot start with an ""
+            ""underscore '_'""
+        )
+
+    if identifier[0:1].isdigit():
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, cannot start with a ""
+            ""number""
+        )
+
+    if not identifier.isidentifier():
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, is invalid.""
+        )
+
+    if keyword.iskeyword(identifier):
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, cannot be a keyword""
+        )
+
+    if identifier in _BUILTIN_NAMES:
+        raise SyntaxError(
+            f""The given 'identifier', {identifier!r}, cannot be a builtin name""
+        )"
