@@ -4,7 +4,7 @@ Krátký přehled projektu a výsledků experimentu s generováním dokumentace 
 
 ## Popis práce
 Cílem studie je ověřit, jak efektivně dokážou moderní LLM (GPT-4o, o4-mini-high, o3) automaticky generovat docstringy pro 15 funkcí a metod z různých Python repozitářů. Původní docstringy byly z kódu odstraněny („code_no_doc“) a modelům předkládány v samostatných chatech s jednoduchým promptem:
-````python
+````
 ```
 <code_no_doc>
 ```
